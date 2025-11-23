@@ -3,18 +3,11 @@ import os
 from datetime import datetime
 from collections import defaultdict
 
-# --- Configuration ---
 DATA_FILE = 'expenses.csv'
 FIELDNAMES = ['Date', 'Category', 'Amount', 'Description']
 DATE_FORMAT = '%Y-%m-%d'
 
-# --- Utility Functions ---
-
 def load_expenses():
-    """
-    Loads expenses from the CSV file. If the file doesn't exist, returns an empty list.
-    Handles basic data type conversion for 'Amount'.
-    """
     expenses = []
     if not os.path.exists(DATA_FILE):
         return expenses
@@ -24,7 +17,6 @@ def load_expenses():
             reader = csv.DictReader(file)
             for row in reader:
                 try:
-                    # Convert amount to float for calculations
                     row['Amount'] = float(row['Amount'])
                     expenses.append(row)
                 except ValueError:
@@ -35,9 +27,6 @@ def load_expenses():
         return []
 
 def save_expenses(expenses):
-    """
-    Saves the list of expense dictionaries back to the CSV file.
-    """
     try:
         with open(DATA_FILE, mode='w', newline='', encoding='utf-8') as file:
             writer = csv.DictWriter(file, fieldnames=FIELDNAMES)
@@ -47,28 +36,20 @@ def save_expenses(expenses):
     except Exception as e:
         print(f"Error saving data: {e}")
 
-# --- Core Application Logic ---
-
 def add_expense(expenses):
-    """
-    Prompts the user for expense details and adds it to the list.
-    """
     print("\n--- Add New Expense ---")
     
-    # 1. Get Date
     while True:
         date_str = input(f"Enter Date (YYYY-MM-DD, e.g., {datetime.now().strftime(DATE_FORMAT)}): ").strip()
         if not date_str:
             date_str = datetime.now().strftime(DATE_FORMAT)
             print(f"Using today's date: {date_str}")
         try:
-            # Validate format, but store as string
             datetime.strptime(date_str, DATE_FORMAT)
             break
         except ValueError:
             print("Invalid date format. Please use YYYY-MM-DD.")
 
-    # 2. Get Amount
     while True:
         try:
             amount = float(input("Enter Amount: ").strip())
@@ -79,17 +60,14 @@ def add_expense(expenses):
         except ValueError:
             print("Invalid amount. Please enter a number.")
     
-    # 3. Get Category
     print("Available Categories: Food, Bills, Transport, Entertainment, Income, Other")
     category = input("Enter Category: ").strip() or "Other"
 
-    # 4. Get Description
     description = input("Enter Description (optional): ").strip() or "N/A"
 
     new_expense = {
         'Date': date_str,
         'Category': category,
-        # Store amount as float initially for processing, CSV writer will handle conversion
         'Amount': amount, 
         'Description': description
     }
@@ -98,34 +76,26 @@ def add_expense(expenses):
 
 
 def view_expenses(expenses):
-    """
-    Displays all recorded expenses in a formatted table.
-    """
     if not expenses:
         print("\n(No expenses recorded yet.)")
         return
 
     print("\n--- All Expenses ---")
     
-    # Sort by date for better readability (using the string representation)
     sorted_expenses = sorted(expenses, key=lambda x: x['Date'], reverse=True)
     
-    # Determine column widths
     col_widths = {
         'Date': 10,
         'Category': max(len(row['Category']) for row in expenses) if expenses else 8,
         'Amount': 10,
         'Description': 30
     }
-    # Ensure minimum width for headers
     for key in col_widths:
         col_widths[key] = max(col_widths[key], len(key))
 
-    # Calculate padding for clean alignment
     def pad(text, width):
         return str(text).ljust(width)
 
-    # Print header
     header = f"| {pad('Date', col_widths['Date'])} | {pad('Category', col_widths['Category'])} | {pad('Amount', col_widths['Amount'])} | {pad('Description', col_widths['Description'])} |"
     separator = '-' * len(header)
     
@@ -133,7 +103,6 @@ def view_expenses(expenses):
     print(header)
     print(separator)
 
-    # Print rows
     for expense in sorted_expenses:
         amount_str = f"{expense['Amount']:.2f}".rjust(col_widths['Amount'])
         row = (
@@ -148,9 +117,6 @@ def view_expenses(expenses):
 
 
 def summarize_expenses(expenses):
-    """
-    Calculates and displays the total expenses and a breakdown by category.
-    """
     if not expenses:
         print("\n(No expenses to summarize.)")
         return
@@ -167,19 +133,15 @@ def summarize_expenses(expenses):
         total_expense += amount
         category_summary[category] += amount
 
-    # Display total
     print(f"\nTOTAL SPENT: ${total_expense:,.2f}")
     
-    # Display category breakdown
     print("\nBreakdown by Category:")
     
-    # Find the longest category name for clean alignment
     max_cat_len = max(len(cat) for cat in category_summary.keys())
     
     for category, amount in sorted(category_summary.items(), key=lambda item: item[1], reverse=True):
         percentage = (amount / total_expense) * 100 if total_expense else 0
         
-        # Format output for alignment
         category_padded = category.ljust(max_cat_len)
         amount_formatted = f"${amount:,.2f}".rjust(12)
         percentage_formatted = f"({percentage:5.2f}%)"
@@ -188,15 +150,9 @@ def summarize_expenses(expenses):
     
     print("-" * (max_cat_len + 20))
 
-# --- Main Program Loop ---
-
 def main():
-    """
-    Main function to run the expense tracker application.
-    """
     print("Welcome to the CLI Expense Tracker!")
     
-    # Load data immediately upon startup
     expenses = load_expenses()
     print(f"Successfully loaded {len(expenses)} existing records.")
 
